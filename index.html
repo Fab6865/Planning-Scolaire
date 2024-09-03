@@ -1,0 +1,593 @@
+<html><head><base href="https://websimcreationengine.com/school-planner/"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Planning Scolaire Enfants</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .app-title {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    background-color: #3498db;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .menu-button {
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 3px;
+  }
+  .menu-button:hover {
+    background-color: #1c638e;
+  }
+  .content {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 20px;
+  }
+  .day {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+    position: relative;
+  }
+  .day:hover {
+    background-color: #e8e8e8;
+  }
+  .selected {
+    background-color: #e74c3c;
+    color: white;
+  }
+  .color-picker {
+    margin-top: 20px;
+  }
+  .event-form {
+    margin-top: 20px;
+  }
+  .event-form input, .event-form select {
+    margin-bottom: 10px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+  .event {
+    font-size: 0.8em;
+    margin-top: 5px;
+    padding: 2px;
+    border-radius: 3px;
+    position: relative;
+  }
+  .afternoon-event {
+    font-weight: bold;
+  }
+  #saveStatus {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 5px;
+    display: none;
+    animation: fadeInOut 2s ease-in-out;
+  }
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    10%, 90% { opacity: 1; }
+  }
+  #schoolEditor {
+    display: flex;
+    flex-direction: column;
+  }
+  #schoolEditor input, #schoolEditor select {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+  .school-info {
+    margin-top: 20px;
+  }
+  .school-info p {
+    margin: 5px 0;
+  }
+  .school-info a {
+    color: #3498db;
+    text-decoration: none;
+  }
+  .school-info a:hover {
+    text-decoration: underline;
+  }
+  .delete-button, .clear-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .delete-button:hover, .clear-button:hover {
+    background-color: #c0392b;
+  }
+  #schoolList {
+    margin-top: 20px;
+  }
+  .school-item {
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .clear-event {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8em;
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+  .day-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+  }
+  .month-selector {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .month-selector button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .month-selector button:hover {
+    background-color: #2980b9;
+  }
+  .day-color {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.3;
+    z-index: 0;
+  }
+  .day-content {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="app-title">Planning Scolaire Enfants</h1>
+    <div class="menu" id="mainMenu">
+      <button class="menu-button" onclick="showContent('editor')">Éditeur des enfants</button>
+      <button class="menu-button" onclick="showContent('schoolEditor')">Éditeur école</button>
+    </div>
+    <div id="editor" class="content">
+      <h2>Éditeur des enfants</h2>
+      <form id="childForm">
+        <label for="childName">Nom de l'enfant:</label>
+        <input type="text" id="childName" name="childName" required>
+        <label for="childAge">Âge:</label>
+        <input type="number" id="childAge" name="childAge" required>
+        <label for="childClass">Classe:</label>
+        <input type="text" id="childClass" name="childClass" required>
+        <button type="submit">Enregistrer</button>
+      </form>
+      <div id="childrenList"></div>
+    </div>
+    <div id="planner" class="content" style="display: none;">
+      <h2>Planning scolaire</h2>
+      <div class="month-selector">
+        <button onclick="changeMonth(-1)">&lt; Mois précédent</button>
+        <span id="currentMonthYear"></span>
+        <button onclick="changeMonth(1)">Mois suivant &gt;</button>
+      </div>
+      <div id="calendar"></div>
+      <div class="color-picker">
+        <label for="eventColor">Couleur de l'événement:</label>
+        <input type="color" id="eventColor" value="#3498db">
+      </div>
+      <div class="event-form">
+        <select id="eventPeriod">
+          <option value="morning">Cours du matin</option>
+          <option value="afternoon">Cours de l'après-midi</option>
+          <option value="other">Autre événement</option>
+        </select>
+        <input type="time" id="eventStartTime" required>
+        <input type="time" id="eventEndTime" required>
+        <input type="text" id="eventDescription" placeholder="Description de l'événement" required>
+        <select id="eventType">
+          <option value="course">Cours</option>
+          <option value="appointment">Rendez-vous avec la maîtresse</option>
+          <option value="holiday">Vacances scolaires</option>
+          <option value="rest">Repos</option>
+        </select>
+        <button onclick="addEvent()">Ajouter l'événement</button>
+        <button class="clear-button" onclick="clearSelectedDays()">Effacer la sélection</button>
+      </div>
+    </div>
+    <div id="schoolEditor" class="content" style="display: none;">
+      <h2>Éditeur école</h2>
+      <form id="schoolForm">
+        <label for="schoolName">Nom de l'école:</label>
+        <input type="text" id="schoolName" name="schoolName" required>
+        <label for="teacherName">Nom de la maîtresse / du maître:</label>
+        <input type="text" id="teacherName" name="teacherName" required>
+        <label for="schoolPhone">Numéro de téléphone:</label>
+        <input type="tel" id="schoolPhone" name="schoolPhone" required>
+        <label for="schoolEmail">Adresse e-mail de l'école:</label>
+        <input type="email" id="schoolEmail" name="schoolEmail" required>
+        <label for="schoolChild">Enfant correspondant:</label>
+        <select id="schoolChild" name="schoolChild" required>
+          <option value="">Sélectionner un enfant</option>
+        </select>
+        <button type="submit">Enregistrer</button>
+        <button type="button" class="clear-button" onclick="clearSchoolForm()">Effacer</button>
+      </form>
+      <div id="schoolList"></div>
+    </div>
+  </div>
+  <div id="saveStatus">Sauvegardé</div>
+
+<script>
+let selectedDays = [];
+let children = [];
+let currentChildIndex = -1;
+let schools = [];
+let currentDate = new Date();
+
+const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+function showContent(contentId) {
+  document.getElementById('editor').style.display = 'none';
+  document.getElementById('planner').style.display = 'none';
+  document.getElementById('schoolEditor').style.display = 'none';
+  document.getElementById(contentId).style.display = 'block';
+}
+
+function createCalendar() {
+  const calendar = document.getElementById('calendar');
+  calendar.innerHTML = '';
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  document.getElementById('currentMonthYear').textContent = `${months[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // Add day headers
+  daysOfWeek.forEach(day => {
+    const dayHeader = document.createElement('div');
+    dayHeader.classList.add('day-header');
+    dayHeader.textContent = day;
+    calendar.appendChild(dayHeader);
+  });
+
+  // Add empty cells for days before the first day of the month
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    const emptyDay = document.createElement('div');
+    emptyDay.classList.add('day');
+    calendar.appendChild(emptyDay);
+  }
+
+  // Add days of the month
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    const day = document.createElement('div');
+    day.classList.add('day');
+    day.innerHTML = `
+      <div class="day-color"></div>
+      <div class="day-content">
+        <strong>${i}</strong>
+      </div>
+    `;
+    day.onclick = () => toggleDaySelection(day, i);
+    calendar.appendChild(day);
+  }
+}
+
+function toggleDaySelection(day, dayNumber) {
+  day.classList.toggle('selected');
+  if (selectedDays.includes(dayNumber)) {
+    selectedDays = selectedDays.filter(d => d !== dayNumber);
+  } else {
+    selectedDays.push(dayNumber);
+  }
+}
+
+function changeMonth(delta) {
+  currentDate.setMonth(currentDate.getMonth() + delta);
+  createCalendar();
+  if (currentChildIndex !== -1) {
+    loadChildEvents(currentChildIndex);
+  }
+}
+
+function addEvent() {
+  const period = document.getElementById('eventPeriod').value;
+  const startTime = document.getElementById('eventStartTime').value;
+  const endTime = document.getElementById('eventEndTime').value;
+  const description = document.getElementById('eventDescription').value;
+  const type = document.getElementById('eventType').value;
+  const color = document.getElementById('eventColor').value;
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  selectedDays.forEach(day => {
+    const dayElement = document.querySelector(`.day:nth-child(${day + 7})`);
+    const dayContent = dayElement.querySelector('.day-content');
+    const dayColor = dayElement.querySelector('.day-color');
+    dayColor.style.backgroundColor = color;
+
+    const eventElement = document.createElement('div');
+    eventElement.classList.add('event');
+    if (period === 'afternoon') {
+      eventElement.classList.add('afternoon-event');
+    }
+    eventElement.innerHTML = `
+      ${period === 'morning' ? 'Matin' : period === 'afternoon' ? 'Après-midi' : 'Autre'}: ${startTime}-${endTime} ${description} (${type})
+      <button class="clear-event" onclick="clearEvent(this, ${day}, ${children[currentChildIndex].events.length})">X</button>
+    `;
+    dayContent.appendChild(eventElement);
+
+    children[currentChildIndex].events.push({
+      year,
+      month,
+      day,
+      period,
+      startTime,
+      endTime,
+      description,
+      type,
+      color
+    });
+  });
+
+  document.getElementById('eventStartTime').value = '';
+  document.getElementById('eventEndTime').value = '';
+  document.getElementById('eventDescription').value = '';
+  document.getElementById('eventType').value = 'course';
+  selectedDays.forEach(day => {
+    const dayElement = document.querySelector(`.day:nth-child(${day + 7})`);
+    dayElement.classList.remove('selected');
+  });
+  selectedDays = [];
+
+  saveData();
+}
+
+function clearEvent(button, day, eventIndex) {
+  const dayElement = document.querySelector(`.day:nth-child(${day + 7})`);
+  const dayContent = dayElement.querySelector('.day-content');
+  dayContent.removeChild(button.parentElement);
+  children[currentChildIndex].events = children[currentChildIndex].events.filter((_, index) => index !== eventIndex);
+
+  // Reset day color if no events left
+  if (dayContent.querySelectorAll('.event').length === 0) {
+    const dayColor = dayElement.querySelector('.day-color');
+    dayColor.style.backgroundColor = '';
+  }
+
+  saveData();
+}
+
+function clearSelectedDays() {
+  selectedDays.forEach(day => {
+    const dayElement = document.querySelector(`.day:nth-child(${day + 7})`);
+    dayElement.classList.remove('selected');
+  });
+  selectedDays = [];
+}
+
+function addChildButton(child, index) {
+  const mainMenu = document.getElementById('mainMenu');
+  const button = document.createElement('button');
+  button.classList.add('menu-button');
+  button.textContent = child.name;
+  button.onclick = () => showChildPlanner(index);
+  mainMenu.appendChild(button);
+  updateChildSelect();
+}
+
+function showChildPlanner(index) {
+  currentChildIndex = index;
+  showContent('planner');
+  document.querySelector('#planner h2').textContent = `Planning de ${children[index].name}`;
+  createCalendar();
+  loadChildEvents(index);
+}
+
+function updateChildrenList() {
+  const childrenList = document.getElementById('childrenList');
+  childrenList.innerHTML = '<h3>Enfants enregistrés:</h3>';
+  children.forEach((child, index) => {
+    childrenList.innerHTML += `<p>${child.name}, ${child.age} ans, Classe: ${child.class}</p>`;
+  });
+}
+
+document.getElementById('childForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const name = document.getElementById('childName').value;
+  const age = document.getElementById('childAge').value;
+  const childClass = document.getElementById('childClass').value;
+  const child = { name, age, class: childClass, events: [] };
+  children.push(child);
+  addChildButton(child, children.length - 1);
+  updateChildrenList();
+  updateChildSelect();
+  alert(`Enfant enregistré : ${name}, ${age} ans, Classe : ${childClass}`);
+  this.reset();
+  saveData();
+});
+
+document.getElementById('schoolForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const schoolInfo = {
+    name: document.getElementById('schoolName').value,
+    teacher: document.getElementById('teacherName').value,
+    phone: document.getElementById('schoolPhone').value,
+    email: document.getElementById('schoolEmail').value,
+    childIndex: document.getElementById('schoolChild').value
+  };
+  schools.push(schoolInfo);
+  updateSchoolList();
+  saveData();
+  alert('Informations de l\'école enregistrées');
+  this.reset();
+});
+
+function updateSchoolList() {
+  const schoolList = document.getElementById('schoolList');
+  schoolList.innerHTML = '<h3>Écoles enregistrées:</h3>';
+  schools.forEach((school, index) => {
+    const schoolItem = document.createElement('div');
+    schoolItem.classList.add('school-item');
+    schoolItem.innerHTML = `
+      <div>
+        <p><strong>${school.name}</strong></p>
+        <p>Maîtresse/Maître: ${school.teacher}</p>
+        <p>Téléphone: <a href="tel:${school.phone}">${school.phone}</a></p>
+        <p>Email: <a href="mailto:${school.email}">${school.email}</a></p>
+        <p>Enfant: ${children[school.childIndex].name}</p>
+      </div>
+      <button class="delete-button" onclick="deleteSchool(${index})">Supprimer</button>
+    `;
+    schoolList.appendChild(schoolItem);
+  });
+}
+
+function deleteSchool(index) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette école ?')) {
+    schools.splice(index, 1);
+    updateSchoolList();
+    saveData();
+  }
+}
+
+function updateChildSelect() {
+  const schoolChild = document.getElementById('schoolChild');
+  schoolChild.innerHTML = '<option value="">Sélectionner un enfant</option>';
+  children.forEach((child, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = child.name;
+    schoolChild.appendChild(option);
+  });
+}
+
+function saveData() {
+  localStorage.setItem('schoolPlannerData', JSON.stringify({ children, schools }));
+  showSaveStatus();
+}
+
+function loadData() {
+  const savedData = localStorage.getItem('schoolPlannerData');
+  if (savedData) {
+    const parsedData = JSON.parse(savedData);
+    children = parsedData.children || [];
+    schools = parsedData.schools || [];
+    children.forEach((child, index) => {
+      addChildButton(child, index);
+    });
+    updateChildrenList();
+    updateSchoolList();
+    updateChildSelect();
+  }
+}
+
+function loadChildEvents(index) {
+  const calendar = document.getElementById('calendar');
+  children[index].events.forEach((event, eventIndex) => {
+    if (event.year === currentDate.getFullYear() && event.month === currentDate.getMonth()) {
+      const dayElement = calendar.children[event.day + 6];
+      const dayContent = dayElement.querySelector('.day-content');
+      const dayColor = dayElement.querySelector('.day-color');
+      dayColor.style.backgroundColor = event.color;
+
+      const eventElement = document.createElement('div');
+      eventElement.classList.add('event');
+      if (event.period === 'afternoon') {
+        eventElement.classList.add('afternoon-event');
+      }
+      eventElement.innerHTML = `
+        ${event.period === 'morning' ? 'Matin' : event.period === 'afternoon' ? 'Après-midi' : 'Autre'}: ${event.startTime}-${event.endTime} ${event.description} (${event.type})
+        <button class="clear-event" onclick="clearEvent(this, ${event.day}, ${eventIndex})">X</button>
+      `;
+      dayContent.appendChild(eventElement);
+    }
+  });
+}
+
+function showSaveStatus() {
+  const saveStatus = document.getElementById('saveStatus');
+  saveStatus.style.display = 'block';
+  setTimeout(() => {
+    saveStatus.style.display = 'none';
+  }, 2000);
+}
+
+function clearSchoolForm() {
+  document.getElementById('schoolForm').reset();
+}
+
+setInterval(saveData, 5 * 60 * 1000);
+
+createCalendar();
+showContent('editor');
+loadData();
+</script>
+</body>
+</html>
